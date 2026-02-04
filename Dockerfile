@@ -69,7 +69,16 @@ RUN wget -q https://huggingface.co/Kijai/vitpose_comfy/resolve/main/onnx/vitpose
 RUN wget -q https://huggingface.co/Kijai/vitpose_comfy/resolve/main/onnx/vitpose_h_wholebody_data.bin \
     -O /ComfyUI/models/detection/vitpose_h_wholebody_data.bin
 
+# Pre-download NLF Model for warm start (avoid runtime download)
+RUN mkdir -p /ComfyUI/models/nlf && \
+    wget -q https://github.com/isarandi/nlf/releases/download/v0.3.2/nlf_l_multi_0.3.2.torchscript \
+    -O /ComfyUI/models/nlf/nlf_l_multi_0.3.2.torchscript
+
 COPY . .
+
+# Copy default dance video for warm start (user only provides prompt + image)
+RUN mkdir -p /ComfyUI/input && \
+    cp /assets/default_video.mp4 /ComfyUI/input/default_video.mp4
 RUN mkdir -p /ComfyUI/user/default/ComfyUI-Manager
 COPY config.ini /ComfyUI/user/default/ComfyUI-Manager/config.ini
 RUN chmod +x /entrypoint.sh

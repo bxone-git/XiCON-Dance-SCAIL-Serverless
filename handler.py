@@ -18,6 +18,9 @@ logger = logging.getLogger(__name__)
 server_address = os.getenv('SERVER_ADDRESS', '127.0.0.1')
 client_id = str(uuid.uuid4())
 
+# Default video path (embedded in Docker for warm start)
+DEFAULT_VIDEO_PATH = "/ComfyUI/input/default_video.mp4"
+
 def queue_prompt(prompt):
     """Queue a prompt to ComfyUI"""
     url = f"http://{server_address}:8188/prompt"
@@ -137,6 +140,7 @@ def handler(job):
         image_path = process_input(job_input["image_base64"], task_id, "input_image.jpg", "base64")
 
     # Process video input (video_path, video_url, or video_base64)
+    # If not provided, use default video (embedded in Docker for warm start)
     video_path = None
     if "video_path" in job_input:
         video_path = process_input(job_input["video_path"], task_id, "input_video.mp4", "path")
@@ -144,25 +148,27 @@ def handler(job):
         video_path = process_input(job_input["video_url"], task_id, "input_video.mp4", "url")
     elif "video_base64" in job_input:
         video_path = process_input(job_input["video_base64"], task_id, "input_video.mp4", "base64")
+    else:
+        # Use default dance video (warm start)
+        video_path = DEFAULT_VIDEO_PATH
+        logger.info(f"📹 Using default video: {video_path}")
 
-    # Validate required inputs
+    # Validate required inputs (only image is required, video has default)
     if image_path is None:
         raise Exception("Image input is required. Provide image_path, image_url, or image_base64")
-    if video_path is None:
-        raise Exception("Video input is required. Provide video_path, video_url, or video_base64")
 
     # Load SCAIL workflow
     prompt = load_workflow('/XiCON_Dance_SCAIL_api.json')
 
-    # Extract parameters with defaults
-    width = job_input.get("width", 512)
-    height = job_input.get("height", 512)
-    steps = job_input.get("steps", 6)
-    cfg = job_input.get("cfg", 1.0)
-    seed = job_input.get("seed", 0)
-    fps = job_input.get("fps", 30)
-    positive_prompt = job_input.get("prompt", "")
-    negative_prompt = job_input.get("negative_prompt", "")
+    # Extract parameters with defaults (matched to workflow defaults)
+    width = job_input.get("width", 416)                    # Default: 416 (portrait)
+    height = job_input.get("height", 672)                  # Default: 672 (portrait)
+    steps = job_input.get("steps", 6)                      # Default: 6
+    cfg = job_input.get("cfg", 1.0)                        # Default: 1.0
+    seed = job_input.get("seed", 0)                        # Default: 0 (random)
+    fps = job_input.get("fps", 24)                         # Default: 24
+    positive_prompt = job_input.get("prompt", "the human starts to dance")
+    negative_prompt = job_input.get("negative_prompt", "色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走")
 
     # Inject parameters into SCAIL workflow nodes
     prompt["106"]["inputs"]["image"] = image_path                          # LoadImage
