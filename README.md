@@ -215,3 +215,6 @@ RunPod Hub에서 자동으로 새 빌드가 트리거됩니다.
 ---
 
 *XiCON Dance SCAIL - Powered by Wan2.1 SCAIL & ComfyUI*
+
+
+[![Runpod](https://api.runpod.io/badge/bxone-git/XiCON-Dance-SCAIL-Serverless)](https://console.runpod.io/hub/bxone-git/XiCON-Dance-SCAIL-Serverless)
