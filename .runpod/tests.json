@@ -1,23 +1,24 @@
 {
   "tests": [
     {
-      "name": "validation_text_input",
+      "name": "dance_animation_test",
       "input": {
-        "text": "Hello world",
-        "language": "en"
+        "image_url": "https://huggingface.co/datasets/huggingface/documentation-images/resolve/main/diffusers/svd/rocket.png",
+        "prompt": "the human starts to dance",
+        "width": 416,
+        "height": 672,
+        "steps": 6,
+        "cfg": 1.0,
+        "seed": 42,
+        "fps": 24
       },
-      "timeout": 10000
+      "timeout": 600000
     }
   ],
   "config": {
     "gpuTypeId": "NVIDIA GeForce RTX 4090",
     "gpuCount": 1,
-    "env": [
-      {
-        "key": "ENV_KEY_HERE",
-        "value": "ENV_VALUE_HERE"
-      }
-    ],
+    "env": [],
     "allowedCudaVersions": [
       "12.7",
       "12.6",
