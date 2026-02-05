@@ -130,7 +130,9 @@ def handler(job):
     logger.info(f"Received job input: {job_input}")
     task_id = f"task_{uuid.uuid4()}"
 
-    # Process image input (image_path, image_url, or image_base64)
+    # Process image input - supports multiple formats:
+    # 1. Direct: image_path, image_url, image_base64
+    # 2. Nested: images.reference_image (from n8n/frontend)
     image_path = None
     if "image_path" in job_input:
         image_path = process_input(job_input["image_path"], task_id, "input_image.jpg", "path")
@@ -138,9 +140,17 @@ def handler(job):
         image_path = process_input(job_input["image_url"], task_id, "input_image.jpg", "url")
     elif "image_base64" in job_input:
         image_path = process_input(job_input["image_base64"], task_id, "input_image.jpg", "base64")
+    # Support nested format: images.reference_image (from n8n/frontend)
+    elif "images" in job_input and isinstance(job_input["images"], dict):
+        images = job_input["images"]
+        if images.get("reference_image"):
+            logger.info(f"🖼️ Using nested format: images.reference_image")
+            image_path = process_input(images["reference_image"], task_id, "input_image.jpg", "url")
 
-    # Process video input (video_path, video_url, or video_base64)
-    # If not provided, use default video (embedded in Docker for warm start)
+    # Process video input - supports multiple formats:
+    # 1. Direct: video_path, video_url, video_base64
+    # 2. Nested: videos.dance_video (from n8n/frontend)
+    # If not provided or empty, use default video (embedded in Docker for warm start)
     video_path = None
     if "video_path" in job_input:
         video_path = process_input(job_input["video_path"], task_id, "input_video.mp4", "path")
@@ -148,8 +158,15 @@ def handler(job):
         video_path = process_input(job_input["video_url"], task_id, "input_video.mp4", "url")
     elif "video_base64" in job_input:
         video_path = process_input(job_input["video_base64"], task_id, "input_video.mp4", "base64")
-    else:
-        # Use default dance video (warm start)
+    # Support nested format: videos.dance_video (from n8n/frontend)
+    elif "videos" in job_input and isinstance(job_input["videos"], dict):
+        videos = job_input["videos"]
+        if videos.get("dance_video"):  # Only if non-empty
+            logger.info(f"🎬 Using nested format: videos.dance_video")
+            video_path = process_input(videos["dance_video"], task_id, "input_video.mp4", "url")
+
+    # Use default video if no video provided
+    if video_path is None:
         video_path = DEFAULT_VIDEO_PATH
         logger.info(f"📹 Using default video: {video_path}")
 
